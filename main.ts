@@ -1,9 +1,7 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
 
-// Remember to rename these classes and interfaces!
-
 interface WeeklyReviewSettings {
-	mySetting: string;
+	daysAgo: number;
 }
 
 const DEFAULT_SETTINGS: WeeklyReviewSettings = {
@@ -19,19 +17,9 @@ export default class WeeklyReview extends Plugin {
 		// This adds a simple command that can be triggered anywhere
 		this.addCommand({
 			id: 'Start Review',
-			name: 'Start Review',
+			name: 'Start Weekly Review',
 			callback: () => {
-				const files = this.app.vault.getMarkdownFiles();
-
-				let start = moment(moment().startOf('day')).subtract(this.settings.daysAgo, "days");
-				let recentFiles = files.filter(f => start.isBefore(moment(f.stat.ctime))).sort((a, b) => b?.stat.ctime - a?.stat.ctime);
-
-				new Notice(`Opening ${recentFiles.length} files created in the last ${this.settings.daysAgo} days.`);
-
-				recentFiles.forEach((f) => {
-					let leaf = app.workspace.getLeaf('tab');
-					leaf.openFile(f)
-				})
+				this.createWeeklyReviewFile();
 			}
 		});
 
@@ -40,7 +28,7 @@ export default class WeeklyReview extends Plugin {
 	}
 
 	onunload() {
-
+		// Perform any cleanup if necessary
 	}
 
 	async loadSettings() {
@@ -49,6 +37,20 @@ export default class WeeklyReview extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
+	}
+
+	async createWeeklyReviewFile() {
+		const files = this.app.vault.getMarkdownFiles();
+		let start = moment().subtract(this.settings.daysAgo, 'days').startOf('day');
+		let recentFiles = files.filter(f => moment(f.stat.ctime).isAfter(start)).sort((a, b) => b.stat.ctime - a.stat.ctime);
+
+		const reviewContent = recentFiles.map(f => `- [[${f.basename}]]`).join('\n');
+		const reviewFilename = `Weekly Review - ${moment().format('YYYY-MM-DD')}.md`;
+
+		await this.app.vault.create(reviewFilename, reviewContent);
+
+		new Notice(`Weekly review file created with links to ${recentFiles.length} files.`);
+		app.workspace.openLinkText(reviewFilename, '', false, { active: true });
 	}
 }
 
@@ -61,21 +63,24 @@ class WeeklyReviewSettingTab extends PluginSettingTab {
 	}
 
 	display(): void {
-		const {containerEl} = this;
-
+		const { containerEl } = this;
 		containerEl.empty();
-
-		containerEl.createEl('h2', {text: 'Settings for Weekly Review'});
+		containerEl.createEl('h2', { text: 'Settings for Weekly Review' });
 
 		new Setting(containerEl)
 			.setName('How many days to show?')
-			.setDesc('Typically this is 7')
+			.setDesc('Set the number of days for the review period (default is 7)')
 			.addText(text => text
 				.setPlaceholder('Days')
 				.setValue(this.plugin.settings.daysAgo.toString())
 				.onChange(async (value) => {
-					this.plugin.settings.daysAgo = parseInt(value);
-					await this.plugin.saveSettings();
+					let num = parseInt(value);
+					if (!isNaN(num) && num > 0) {
+						this.plugin.settings.daysAgo = num;
+						await this.plugin.saveSettings();
+					} else {
+						new Notice('Please enter a valid number of days.');
+					}
 				}));
 	}
 }
