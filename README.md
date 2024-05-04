@@ -1,6 +1,9 @@
-# Weekly Review
+# Weekly Review Linker
 
-My weekly review process consists of reviewing all of the files that I created this week, but I found opening all of those files in Obsidian to be a bit tedious. This plugin opens all of the files you have created in the last week (how many days you want to open is configurable).
+Weekly review linker is a fork of the weekly review plugin. Instead of opening all the notes created in the past week it makes a file that links all those notes. This helps a lot for using periodic notes, as the weekly notes are not conntected in your graph. 
+
+
+The rest of the plugin in is the same and I do not want to take credit for that, here it is:
 
 ## Video Walkthrough
 
