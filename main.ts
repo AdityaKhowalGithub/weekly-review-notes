@@ -1,4 +1,5 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, moment } from 'obsidian';
+
 
 interface WeeklyReviewSettings {
 	daysAgo: number;
@@ -65,7 +66,6 @@ class WeeklyReviewSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.createEl('h2', { text: 'Settings for Weekly Review' });
 
 		new Setting(containerEl)
 			.setName('How many days to show?')
